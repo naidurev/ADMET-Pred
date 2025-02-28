@@ -21,3 +21,13 @@ pip install -r requirements.txt
 
 # Run the Streamlit app
 streamlit run app.py
+
+# You can install them with
+pip install rdkit mordred scikit-learn matplotlib pandas seaborn
+
+If you face any issues installing these dependancies with pip then try to use conda for the same.
+
+# scikit-learn
+conda install -c conda-forge scikit-learn
+
+# Also try to use anaconda prompt as it comes with many dependencies already pre-installed.
