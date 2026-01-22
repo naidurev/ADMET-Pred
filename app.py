@@ -4,14 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from admet_predictor import ADMETPredictor, ResultVisualizer
 
-# Page configuration
 st.set_page_config(
     page_title="ADMET Predictor",
     page_icon="💊",
     layout="wide"
 )
 
-# Custom CSS - only basic styling that works well with Streamlit
 st.markdown("""
 <style>
     .main-title {
@@ -49,31 +47,25 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header
 st.markdown('<h1 class="main-title">ADMET Predictor</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Predict Absorption, Distribution, Metabolism, Excretion, and Toxicity properties</p>', 
             unsafe_allow_html=True)
 
-# Initialize predictor
 predictor = ADMETPredictor()
 visualizer = ResultVisualizer()
 
-# Sidebar navigation
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Select option:", ["Single Molecule", "Batch Processing", "About"])
 
-# Single Molecule Page
 if page == "Single Molecule":
     st.header("Single Molecule Analysis")
     
-    # SMILES input and example molecules 
     col1, col2 = st.columns([3, 1])
     
     with col1:
         smiles = st.text_input("Enter SMILES string:", placeholder="Example: CC(=O)OC1=CC=CC=C1C(=O)O (Aspirin)")
     
     with col2:
-        # Example molecules dropdown
         examples = {
             "Select example": "",
             "Aspirin": "CC(=O)OC1=CC=CC=C1C(=O)O",
@@ -84,7 +76,6 @@ if page == "Single Molecule":
         if example != "Select example":
             smiles = examples[example]
     
-    # Predict button
     predict_btn = st.button("Predict ADMET Properties", type="primary", use_container_width=True)
     
     if predict_btn and smiles:
@@ -94,19 +85,15 @@ if page == "Single Molecule":
             if 'error' in result:
                 st.error(f"Error: {result['error']}")
             else:
-                # Results layout
                 st.markdown("---")
                 
-                # Basic info and structure
                 col1, col2 = st.columns([1, 2])
                 
                 with col1:
-                    # Molecule image
                     st.subheader("Molecular Structure")
                     mol_img = visualizer.visualize_molecule(result['mol'])
                     st.image(mol_img, use_column_width=True)
                     
-                    # Basic properties table
                     st.subheader("Physicochemical Properties")
                     
                     props_df = pd.DataFrame(
@@ -118,17 +105,13 @@ if page == "Single Molecule":
                     st.dataframe(props_df)
                 
                 with col2:
-                    # ADMET Profile
                     st.subheader("ADMET Profile")
                     
-                    # Radar chart
                     fig = visualizer.create_radar_chart(result['predictions'])
                     st.pyplot(fig)
                     
-                    # Drug-likeness rules summary
                     st.subheader("Drug-likeness Rules")
                     
-                    # Create a dataframe for the rules display
                     rules_data = pd.DataFrame({
                         "Rule": ["Lipinski Rule of 5", "Veber Rules", "Ghose Filter", "Muegge Filter"],
                         "Status": [
@@ -145,24 +128,17 @@ if page == "Single Molecule":
                         ]
                     })
                     
-                    # Create a custom dataframe display with better visibility for the status column
-                    # This approach uses a combination of background color and high-contrast text
                     def color_status(val):
                         if val == 'PASS':
-                            # Light green background with dark text
                             return 'background-color: #d1fae5; color: #064e3b; font-weight: bold'
                         else:
-                            # Light red background with dark text
                             return 'background-color: #fee2e2; color: #7f1d1d; font-weight: bold'
                     
-                    # Apply the styling with better text contrast
                     st.dataframe(rules_data.style.applymap(color_status, subset=['Status']))
                 
-                # ADMET Properties in tabs
                 st.subheader("Detailed ADMET Properties")
                 tabs = st.tabs(["Absorption", "Distribution", "Metabolism", "Excretion", "Toxicity"])
                 
-                # Absorption tab
                 with tabs[0]:
                     st.write("**Absorption Properties**")
                     
@@ -183,7 +159,6 @@ if page == "Single Molecule":
                     
                     st.table(absorption_data)
                 
-                # Distribution tab
                 with tabs[1]:
                     st.write("**Distribution Properties**")
                     
@@ -204,11 +179,9 @@ if page == "Single Molecule":
                     
                     st.table(distribution_data)
                 
-                # Metabolism tab
                 with tabs[2]:
                     st.write("**Metabolism Properties**")
                     
-                    # Get all CYP substrates plus metabolic stability
                     metabolism_props = []
                     metabolism_values = []
                     
@@ -224,7 +197,6 @@ if page == "Single Molecule":
                     
                     st.table(metabolism_data)
                 
-                # Excretion tab
                 with tabs[3]:
                     st.write("**Excretion Properties**")
                     
@@ -238,7 +210,6 @@ if page == "Single Molecule":
                     
                     st.table(excretion_data)
                 
-                # Toxicity tab
                 with tabs[4]:
                     st.write("**Toxicity Properties**")
                     
@@ -261,7 +232,6 @@ if page == "Single Molecule":
                     
                     st.table(toxicity_data)
                 
-                # Download options
                 st.download_button(
                     label="Download Results as CSV",
                     data=pd.DataFrame([{**{'SMILES': smiles}, 
@@ -272,7 +242,6 @@ if page == "Single Molecule":
                     mime="text/csv"
                 )
 
-# Batch Processing Page
 elif page == "Batch Processing":
     st.header("Batch ADMET Prediction")
     
@@ -281,9 +250,7 @@ elif page == "Batch Processing":
     uploaded_file = st.file_uploader("Upload file (CSV, TXT, SMI)", type=['csv', 'txt', 'smi'])
     
     if uploaded_file is not None:
-        # Process the file
         try:
-            # Detect file type and load accordingly
             if uploaded_file.name.endswith('.csv'):
                 df = pd.read_csv(uploaded_file)
             else:  # txt or smi file
@@ -291,7 +258,6 @@ elif page == "Batch Processing":
                 smiles_list = [line.strip().split()[0] for line in content.splitlines() if line.strip()]
                 df = pd.DataFrame({'SMILES': smiles_list})
             
-            # Find SMILES column
             smiles_col = None
             for col in ['SMILES', 'smiles', 'SMILE', 'smile', 'Structure']:
                 if col in df.columns:
@@ -311,7 +277,6 @@ elif page == "Batch Processing":
                     with st.spinner(f"Processing {len(smiles_list)} molecules..."):
                         results = predictor.predict_batch(smiles_list)
                         
-                        # Process results
                         result_rows = []
                         for i, res in enumerate(results):
                             row = {'SMILES': smiles_list[i]}
@@ -321,7 +286,6 @@ elif page == "Batch Processing":
                                 row['Error'] = res['error']
                             else:
                                 row['Status'] = 'Success'
-                                # Add key properties and predictions
                                 row['MW'] = res['descriptors'].get('MW', 'N/A')
                                 row['LogP'] = res['descriptors'].get('LogP', 'N/A')
                                 row['TPSA'] = res['descriptors'].get('TPSA', 'N/A')
@@ -334,21 +298,17 @@ elif page == "Batch Processing":
                             
                             result_rows.append(row)
                         
-                        # Show results
                         results_df = pd.DataFrame(result_rows)
                         st.dataframe(results_df)
                         
-                        # Prepare full detailed results for download
                         detailed_rows = []
                         for i, res in enumerate(results):
                             if 'error' in res:
                                 continue
                                 
                             row = {'SMILES': smiles_list[i]}
-                            # Add descriptors
                             for k, v in res['descriptors'].items():
                                 row[f"desc_{k}"] = v
-                            # Add predictions
                             for k, v in res['predictions'].items():
                                 row[f"pred_{k}"] = v
                                 
@@ -356,7 +316,6 @@ elif page == "Batch Processing":
                             
                         detailed_df = pd.DataFrame(detailed_rows)
                         
-                        # Download options
                         col1, col2 = st.columns(2)
                         with col1:
                             st.download_button(
@@ -376,7 +335,6 @@ elif page == "Batch Processing":
         except Exception as e:
             st.error(f"Error processing file: {str(e)}")
 
-# About Page
 else:
     st.header("About ADMET Predictor")
     
@@ -421,9 +379,9 @@ else:
     - More advanced predictions require machine learning models trained on specific datasets
     """)
 
-# Footer
 st.markdown("""
 <footer>
     ADMET Predictor Tool v1.0 | Developed for drug discovery acceleration
 </footer>
+
 """, unsafe_allow_html=True)
