@@ -6,7 +6,7 @@ from admet_predictor import ADMETPredictor, ResultVisualizer
 
 st.set_page_config(
     page_title="ADMET Predictor",
-    page_icon="💊",
+    page_icon="A",
     layout="wide"
 )
 
@@ -385,3 +385,4 @@ st.markdown("""
 </footer>
 
 """, unsafe_allow_html=True)
+
